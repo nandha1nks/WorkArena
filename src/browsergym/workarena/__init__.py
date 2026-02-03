@@ -1,4 +1,4 @@
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 
 # Check playwright version early to avoid cryptic errors
 import importlib.metadata
