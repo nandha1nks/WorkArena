@@ -116,6 +116,7 @@ class ServiceNowListTask(AbstractServiceNowTask):
         return super().get_init_scripts() + [
             "registerGsftMainLoaded();",
             self._get_remove_personalize_list_button_script(),
+            self._get_remove_context_menus_script(),
         ]
 
     def _get_remove_personalize_list_button_script(self):
@@ -133,6 +134,37 @@ class ServiceNowListTask(AbstractServiceNowTask):
             }
 
             runInGsftMainOnlyAndProtectByURL(removePersonalizeListButton, '_list.do');
+        """
+        return script
+
+    def _get_remove_context_menus_script(self):
+        """
+        Removes context menus that appear on right-click in list views.
+        These menus provide options that could be used to modify list data outside the task scope.
+        """
+        script = """
+            function removeContextMenus() {
+                waLog('Setting up context menu removal observer...', 'removeContextMenus');
+                // Remove any existing context menus
+                document.querySelectorAll('.context_menu').forEach((menu) => {
+                    menu.remove();
+                });
+                // Observe for new context menus being added
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === 1 && node.classList && node.classList.contains('context_menu')) {
+                                node.remove();
+                                waLog('Removed dynamically added context menu', 'removeContextMenus');
+                            }
+                        });
+                    });
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+                waLog('Context menu observer active', 'removeContextMenus');
+            }
+
+            runInGsftMainOnlyAndProtectByURL(removeContextMenus, '_list.do');
         """
         return script
 
